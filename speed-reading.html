@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Marathon Training</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white:    #ffffff;
+    --off:      #fafafa;
+    --border:   #e8e8e8;
+    --border2:  #d0d0d0;
+    --text:     #111111;
+    --text2:    #555555;
+    --text3:    #999999;
+    --teal:     #007a6e;
+    --teal-lt:  #e6f4f2;
+    --teal-mid: #009688;
+    --black:    #111111;
+    --r:        4px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--white);
+    color: var(--text);
+    overflow: hidden;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+
+  /* ══════════════════════════════
+     NAV — thin, clean, OpenMined-style
+  ══════════════════════════════ */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    height: 60px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--black);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .nav-logo span { color: var(--teal); }
+
+  .nav-center {
+    display: flex;
+    gap: 32px;
+  }
+  .nav-link {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: color 0.15s;
+    border: none; background: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-link:hover { color: var(--teal); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .nav-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text3);
+  }
+  .nav-stat strong { color: var(--teal); font-weight: 600; font-size: 0.85rem; }
+
+  /* ══════════════════════════════
+     SETUP — full editorial page
+  ══════════════════════════════ */
+  #setup {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--white);
+  }
+
+  /* HERO section */
+  .hero {
+    border-bottom: 1px solid var(--border);
+    padding: 56px 48px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .hero-left {}
+  .hero-right { width: 100%; }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 20px;
+  }
+  .hero-tag::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 1.5px;
+    background: var(--teal);
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 3.5vw, 3.2rem);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    margin-bottom: 20px;
+  }
+  .hero-title em { font-style: italic; color: var(--teal); }
+
+  .hero-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .hero-arrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .hero-arrow::before {
+    content: '->';
+    color: var(--teal);
+    font-weight: 600;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--teal);
+    color: var(--white);
+    border: none;
+    padding: 12px 28px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.01em;
+  }
+  .hero-cta:hover { background: #006058; }
+  .hero-cta .arr { transition: transform 0.15s; }
+  .hero-cta:hover .arr { transform: translateX(4px); }
+
+  .hero-right {}
+
+  /* CONFIG PANEL — clean card */
+  .config-card {
+    border: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .config-section {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .config-section:last-child { border-bottom: none; }
+
+  .config-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .config-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* DIFFICULTY */
+  .diff-list { display: flex; flex-direction: column; gap: 0; }
+  .diff-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+  }
+  .diff-row:last-child { border-bottom: none; }
+  .diff-row:hover { background: var(--off); }
+
+  .diff-selector {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border2);
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    transition: border-color 0.15s;
+  }
+  .diff-selector::after {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .diff-row.selected .diff-selector { border-color: var(--teal); }
+  .diff-row.selected .diff-selector::after { opacity: 1; }
+
+  .diff-info { flex: 1; }
+  .diff-name {
+    font-size: 0.88rem; font-weight: 600;
+    color: var(--text); margin-bottom: 2px;
+  }
+  .diff-desc { font-size: 0.75rem; color: var(--text3); line-height: 1.4; }
+
+  .diff-badge {
+    font-size: 0.65rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+  .diff-row.easy   .diff-badge { color: #2e7d32; border-color: #a5d6a7; background: #f1f8f1; }
+  .diff-row.medium .diff-badge { color: #e65100; border-color: #ffcc80; background: #fff8f1; }
+  .diff-row.hard   .diff-badge { color: #c62828; border-color: #ef9a9a; background: #fff5f5; }
+
+  /* SPEED */
+  .speed-row {
+    display: flex; align-items: baseline; gap: 6px; margin-bottom: 16px;
+  }
+  .speed-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem; font-weight: 600;
+    color: var(--black); letter-spacing: -0.04em; line-height: 1;
+  }
+  .speed-unit {
+    font-size: 0.8rem; color: var(--text3); font-weight: 400;
+  }
+
+  .presets { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .pset {
+    font-size: 0.72rem; font-weight: 500;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--text2);
+    cursor: pointer; transition: all 0.12s;
+    font-family: 'Inter', sans-serif;
+  }
+  .pset:hover  { border-color: var(--teal); color: var(--teal); }
+  .pset.active { border-color: var(--teal); color: var(--teal); background: var(--teal-lt); }
+
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 2px;
+    background: var(--border); outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    background: var(--teal); border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(0,122,110,0.15);
+    cursor: pointer; transition: transform 0.12s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+  .range-marks { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.62rem; color: var(--text3); }
+
+  /* MODE */
+  .mode-tabs { display: flex; border: 1px solid var(--border); overflow: hidden; }
+  .mtab {
+    flex: 1; padding: 10px 6px;
+    border: none; border-right: 1px solid var(--border);
+    background: var(--white);
+    font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 500;
+    color: var(--text3); cursor: pointer; text-align: center;
+    transition: all 0.12s; line-height: 1.5;
+  }
+  .mtab:last-child { border-right: none; }
+  .mtab .mi { display: block; font-size: 1rem; margin-bottom: 3px; }
+  .mtab:hover  { background: var(--off); color: var(--text); }
+  .mtab.active { background: var(--teal); color: var(--white); }
+
+  /* KEYBOARD HINTS */
+  .kbd-row { display: flex; gap: 18px; margin-top: 16px; }
+  .kbd-row span { font-size: 0.68rem; color: var(--text3); display: flex; align-items: center; gap: 5px; }
+  kbd {
+    display: inline-block; padding: 1px 6px;
+    border: 1px solid var(--border2);
+    font-size: 0.65rem; color: var(--text2);
+    background: var(--off); font-family: monospace;
+    box-shadow: 0 1px 0 var(--border2);
+  }
+
+  /* BOTTOM ROW — stat bar below hero */
+  .stat-bar {
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .stat-cell {
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .stat-cell:nth-child(2), .stat-cell:nth-child(4) { border-right: none; }
+  .stat-icon { font-size: 1.2rem; }
+  .stat-info {}
+  .stat-val { font-size: 0.85rem; font-weight: 600; color: var(--black); }
+  .stat-lbl { font-size: 0.7rem; color: var(--text3); }
+
+  /* ══════════════════════════════
+     READER
+  ══════════════════════════════ */
+  #reader { display: none; flex: 1; flex-direction: column; overflow: hidden; background: var(--white); }
+
+  #progress-bar { height: 2px; background: var(--border); flex-shrink: 0; }
+  #progress-fill { height: 100%; background: var(--teal); transition: width 0.4s ease; width: 0%; }
+
+  /* STAGE */
+  #stage {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: var(--white); position: relative; overflow: hidden;
+  }
+  #stage::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(0,150,136,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* guide lines */
+  .guide-h {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    width: 280px; height: 1px;
+    background: var(--border);
+    pointer-events: none;
+  }
+  .guide-h.top    { top: calc(50% - 48px); }
+  .guide-h.bottom { top: calc(50% + 48px); }
+
+  #word-display {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 600;
+    color: var(--black);
+    letter-spacing: -0.02em;
+    text-align: center;
+    position: relative; z-index: 2;
+    user-select: none;
+    line-height: 1.05;
+  }
+  #word-display .orp { color: var(--teal); }
+
+  @keyframes wIn {
+    from { opacity: 0; transform: translateY(6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  #word-display.pop { animation: wIn 0.11s ease both; }
+
+  .word-counter {
+    position: absolute;
+    bottom: 32px;
+    right: 48px;
+    font-size: 0.72rem;
+    color: var(--text3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* SCATTER */
+  #scatter-zone {
+    flex: 1; position: relative; overflow: hidden;
+    display: none; background: var(--white);
+  }
+  .sw {
+    position: absolute;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600; color: var(--border2);
+    pointer-events: none; transition: color 0.1s;
+    letter-spacing: -0.02em;
+  }
+  .sw.active { color: var(--black); }
+
+  /* CONTEXT */
+  #ctx {
+    padding: 12px 48px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--off);
+    font-size: 0.78rem;
+    line-height: 1.8;
+    display: flex; align-items: center; gap: 14px;
+    flex-shrink: 0; min-height: 48px;
+  }  .ctx-tag {
+    font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text3);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  #ctx-words .d { color: var(--text3); }
+  #ctx-words .c {
+    color: var(--teal); font-weight: 600;
+    border-bottom: 1.5px solid var(--teal);
+    padding-bottom: 1px;
+  }
+  #ctx-words .u { color: var(--text2); }
+
+  /* CONTROLS */
+  #controls {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 48px;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+  .cbtn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500;
+    color: var(--text2); cursor: pointer; white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .cbtn:hover { border-color: var(--teal); color: var(--teal); }
+  .cbtn.pri {
+    background: var(--teal); border-color: var(--teal);
+    color: var(--white); font-weight: 600;
+  }
+  .cbtn.pri:hover { background: #006058; border-color: #006058; }
+  .cbtn.dng:hover { border-color: #c62828; color: #c62828; }
+
+  .spd-ctrl {
+    flex: 1; display: flex; align-items: center; gap: 12px;
+    border: 1px solid var(--border);
+    background: var(--off);
+    padding: 8px 18px;
+  }
+  .spd-ctrl label {
+    font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text3); white-space: nowrap;
+  }
+  .spd-ctrl input[type=range] { flex: 1; height: 2px; }
+  .spd-ctrl input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; }
+  .wpm-badge {
+    font-size: 0.8rem; font-weight: 600; color: var(--teal);
+    white-space: nowrap; min-width: 70px; text-align: right;
+  }
+
+  /* ══════════════════════════════
+     COMPLETE
+  ══════════════════════════════ */
+  #complete {
+    display: none; flex: 1;
+    align-items: center; justify-content: center;
+    background: var(--white); padding: 40px;
+  }
+
+  .fin-wrap {
+    max-width: 600px; width: 100%;
+    border: 1px solid var(--border);
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  .fin-head {
+    padding: 36px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .fin-eyebrow {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--teal); margin-bottom: 10px;
+  }
+  .fin-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; font-weight: 600; letter-spacing: -0.03em;
+    color: var(--black); line-height: 1.1; margin-bottom: 8px;
+  }
+  .fin-sub { font-size: 0.83rem; color: var(--text2); line-height: 1.6; }
+
+  .fin-scores {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .fin-sc {
+    padding: 28px 32px;
+    border-right: 1px solid var(--border);
+  }
+  .fin-sc:last-child { border-right: none; }
+  .fin-sc .v {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; font-weight: 600;
+    letter-spacing: -0.04em; color: var(--teal);
+    line-height: 1; margin-bottom: 4px;
+  }
+  .fin-sc .l {
+    font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text3);
+  }
+
+  .fin-actions {
+    display: flex; padding: 20px 28px; gap: 10px;
+  }
+  .fa-sec {
+    flex: 1; padding: 10px;
+    border: 1px solid var(--border); background: var(--white);
+    font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500;
+    color: var(--text2); cursor: pointer; transition: all 0.12s;
+  }
+  .fa-sec:hover { border-color: var(--teal); color: var(--teal); }
+  .fa-pri {
+    flex: 2; padding: 10px;
+    background: var(--teal); color: var(--white); border: 1px solid var(--teal);
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .fa-pri:hover { background: #006058; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--black); color: var(--white);
+    padding: 8px 20px;
+    font-size: 0.76rem; font-weight: 500;
+    opacity: 0; transition: all 0.2s ease;
+    pointer-events: none; z-index: 200; white-space: nowrap;
+    border: 1px solid #333;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast strong { color: var(--teal); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Reading Marathon <span>Training</span></div>
+
+    <div class="nav-right">
+      <div class="nav-stat"><strong id="h-wpm">—</strong> WPM</div>
+      <div class="nav-stat"><strong id="h-prog">0%</strong> done</div>
+      <div class="nav-stat"><strong id="h-words">0</strong> words</div>
+    </div>
+  </nav>
+
+  <!-- SETUP -->
+  <section id="setup">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-tag">Eye Training System</div>
+        <h1 class="hero-title">
+          Train your eyes.<br>
+          <em>Unlock your reading potential.</em>
+        </h1>
+        <div class="hero-arrows">
+          <div class="hero-arrow">Read faster with RSVP-based word-by-word training</div>
+          <div class="hero-arrow">Build eye-muscle memory across difficulty levels</div>
+          <div class="hero-arrow">Measure your WPM and track improvement over time</div>
+        </div>
+      </div>
+
+      <div class="hero-right" id="config-scroll" style="margin-top:40px;">
+        <div class="config-card">
+
+          <!-- DIFFICULTY -->
+          <div class="config-section">
+            <div class="config-label">Text difficulty</div>
+            <div class="diff-list">
+              <div class="diff-row easy" data-diff="easy" onclick="selectDiff(this)">
+                <div class="diff-selector"></div>
+                <div class="diff-info">
+                  <div class="diff-name">Everyday</div>
+                  <div class="diff-desc">Simple, clear prose — perfect for warming up.</div>
+                </div>
+                <div class="diff-badge">Easy</div>
+              </div>
+              <div class="diff-row medium selected" data-diff="medium" onclick="selectDiff(this)">
+                <div class="diff-selector"></div>
+                <div class="diff-info">
+                  <div class="diff-name">Literary</div>
+                  <div class="diff-desc">Rich, varied sentences — builds fluency and rhythm.</div>
+                </div>
+                <div class="diff-badge">Medium</div>
+              </div>
+              <div class="diff-row hard" data-diff="hard" onclick="selectDiff(this)">
+                <div class="diff-selector"></div>
+                <div class="diff-info">
+                  <div class="diff-name">Academic</div>
+                  <div class="diff-desc">Dense, technical language — peak cognitive challenge.</div>
+                </div>
+                <div class="diff-badge">Hard</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPEED -->
+          <div class="config-section">
+            <div class="config-label">Reading speed</div>
+            <div class="speed-row">
+              <div class="speed-big" id="setup-wpm">240</div>
+              <div class="speed-unit">words per minute</div>
+            </div>
+            <div class="presets">
+              <button class="pset" onclick="setPreset(120,this)">Slow · 120</button>
+              <button class="pset active" onclick="setPreset(240,this)">Normal · 240</button>
+              <button class="pset" onclick="setPreset(400,this)">Fast · 400</button>
+              <button class="pset" onclick="setPreset(600,this)">Expert · 600</button>
+            </div>
+            <input type="range" id="setup-slider" min="60" max="800" value="240" step="10" oninput="updateSetupSpeed(this.value)">
+            <div class="range-marks"><span>60</span><span>400</span><span>800 WPM</span></div>
+          </div>
+
+          <!-- MODE -->
+          <div class="config-section">
+            <div class="config-label">Display mode</div>
+            <div class="mode-tabs">
+              <button class="mtab active" data-mode="center" onclick="selectMode(this)">
+                <span class="mi">🎯</span>Center Focus
+              </button>
+              <button class="mtab" data-mode="scatter" onclick="selectMode(this)">
+                <span class="mi">👁</span>Eye Scatter
+              </button>
+              <button class="mtab" data-mode="chunk" onclick="selectMode(this)">
+                <span class="mi">⚡</span>2-Word Chunk
+              </button>
+            </div>
+          </div>
+
+          <!-- START + HINTS -->
+          <div class="config-section">
+            <button class="hero-cta" style="width:100%; justify-content:center;" onclick="startSession()">
+              Begin Training Session <span class="arr">→</span>
+            </button>
+            <div class="kbd-row" style="margin-top:14px">
+              <span><kbd>Space</kbd> pause/resume</span>
+              <span><kbd>↑↓</kbd> adjust speed</span>
+              <span><kbd>R</kbd> restart</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- READER -->
+  <section id="reader">
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+
+    <div id="stage">
+      <div class="guide-h top"></div>
+      <div class="guide-h bottom"></div>
+      <div id="word-display"></div>
+      <div class="word-counter" id="word-counter">0 / 0</div>
+    </div>
+    <div id="scatter-zone"></div>
+
+    <div id="ctx">
+      <span class="ctx-tag">Context</span>
+      <span id="ctx-words"></span>
+    </div>
+
+    <div id="controls">
+      <button class="cbtn pri" id="play-btn" onclick="togglePlay()">⏸ Pause</button>
+      <button class="cbtn" onclick="restartSession()">↺ Restart</button>
+      <div class="spd-ctrl">
+        <label>Speed</label>
+        <input type="range" id="reader-slider" min="60" max="800" value="240" step="10" oninput="updateReaderSpeed(this.value)">
+        <span class="wpm-badge" id="reader-wpm">240 WPM</span>
+      </div>
+      <button class="cbtn dng" onclick="endSession()">✕ Exit</button>
+    </div>
+  </section>
+
+  <!-- COMPLETE -->
+  <section id="complete">
+    <div class="fin-wrap">
+      <div class="fin-head">
+        <div class="fin-eyebrow">Session Complete</div>
+        <div class="fin-title">Well done.</div>
+        <div class="fin-sub">Every session sharpens your edge. Consistency is the only secret that great readers share.</div>
+      </div>
+      <div class="fin-scores">
+        <div class="fin-sc"><div class="v" id="fin-wpm">—</div><div class="l">Words per minute</div></div>
+        <div class="fin-sc"><div class="v" id="fin-words">—</div><div class="l">Words read</div></div>
+        <div class="fin-sc"><div class="v" id="fin-time">—</div><div class="l">Time elapsed</div></div>
+      </div>
+      <div class="fin-actions">
+        <button class="fa-sec" onclick="showSetup()">← Change Settings</button>
+        <button class="fa-pri" onclick="restartFromComplete()">Train Again →</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+<div id="toast"></div>
+
+<script>
+const TEXTS = {
+  easy: `The sun rose slowly over the quiet hills as birds began to sing their morning songs. A gentle breeze moved through the tall grass near the old wooden fence. The farmer walked outside to check on his animals and breathed in the cool fresh air. He had always loved mornings like this when everything felt calm and full of promise. His dog followed close behind wagging its tail with excitement. They walked together along the dirt path that led down to the pond at the edge of the farm. The water was still and clear reflecting the pale blue sky above. A pair of ducks glided silently across the surface leaving tiny ripples in their wake. The farmer smiled and tossed a handful of grain along the bank. Simple days like this made all the hard work feel worthwhile. He turned and walked back toward the house where breakfast was already waiting on the table. The smell of fresh coffee drifted through the open window and he felt grateful for everything he had. Life did not need to be complicated to be good. It only needed moments like these quiet and unhurried and full of small beautiful things.`,
+  medium: `In the age of relentless acceleration, solitude has become a radical act. We find ourselves perpetually tethered to the hum of notifications, the amber glow of screens, the low-grade anxiety of perpetual availability. Yet within this connected cacophony, something ancient and necessary is being eroded: the capacity for deep, uninterrupted thought. The great thinkers of history were not distracted creatures. Newton watched an apple fall in contemplative stillness. Darwin spent years observing without the pressure to publish in real time. They had something increasingly rare: time to think without interruption. Reading at speed is more than an efficiency exercise. It is a reclamation of cognitive sovereignty, a way to absorb more of the written world before the world rewrites itself again. When we train our eyes to move with purpose and confidence across the page, we are not merely accelerating input — we are sharpening the instrument of understanding itself. The mind, like any muscle, responds to deliberate stress. Push it gently past its comfort threshold, and it adapts, strengthens, becomes capable of processing what once seemed impenetrable. This is the quiet discipline at the heart of every great reader.`,
+  hard: `The epistemological foundation upon which modern cognitive neuroscience rests presupposes a tripartite distinction between declarative and procedural memory systems, each mediated by anatomically distinct neural substrates exhibiting differential sensitivity to hippocampal lesion. The medial temporal lobe complex, comprising the hippocampus proper, entorhinal cortex, and perirhinal regions, serves as a critical indexing mechanism for episodic and semantic memory consolidation, orchestrating the transfer of labile cortical representations into durable long-term storage via synaptic potentiation cascades. Crucially, working memory — the temporary, capacity-limited system implicated in active information maintenance and manipulation — operates largely independently of hippocampal integrity, relying instead on prefrontal and parietal circuits that sustain representational activity through recurrent excitatory dynamics. Speed reading training, when applied to technical discourse of this complexity, necessarily taxes executive function networks responsible for semantic integration across non-adjacent syntactic constituents. The processing bottleneck is not purely perceptual but reflects the metabolic cost of rapid lexical access and propositional binding in the angular gyrus and Broca's area.`
+};
+
+let words=[], idx=0, wpm=240, playing=false, timer=null;
+let mode='center', diff='medium', startTime=null, scatterPos=[];
+
+function selectDiff(el) {
+  document.querySelectorAll('.diff-row').forEach(r=>r.classList.remove('selected'));
+  el.classList.add('selected'); diff=el.dataset.diff;
+}
+function selectMode(el) {
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); mode=el.dataset.mode;
+}
+function setPreset(val, btn) {
+  wpm=val;
+  document.getElementById('setup-slider').value=val;
+  document.getElementById('setup-wpm').textContent=val;
+  document.querySelectorAll('.pset').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function updateSetupSpeed(val) {
+  wpm=parseInt(val);
+  document.getElementById('setup-wpm').textContent=val;
+  document.querySelectorAll('.pset').forEach(b=>b.classList.remove('active'));
+}
+function updateReaderSpeed(val) {
+  wpm=parseInt(val);
+  const disp=val+' WPM';
+  document.getElementById('reader-wpm').textContent=disp;
+  document.getElementById('h-wpm').textContent=val;
+  toast('<strong>'+val+'</strong> WPM');
+}
+
+function startSession() {
+  words=TEXTS[diff].trim().split(/\s+/).filter(Boolean);
+  idx=0; startTime=Date.now();
+  document.getElementById('reader-slider').value=wpm;
+  document.getElementById('reader-wpm').textContent=wpm+' WPM';
+  document.getElementById('h-wpm').textContent=wpm;
+
+  document.getElementById('setup').style.display='none';
+  document.getElementById('complete').style.display='none';
+  const reader=document.getElementById('reader');
+  reader.style.display='flex';
+
+  const stage=document.getElementById('stage');
+  const scatter=document.getElementById('scatter-zone');
+  if(mode==='scatter'){
+    stage.style.display='none'; scatter.style.display='block'; buildScatter();
+  } else {
+    stage.style.display='flex'; scatter.style.display='none';
+  }
+
+  playing=true;
+  document.getElementById('play-btn').textContent='⏸ Pause';
+  document.getElementById('progress-fill').style.width='0%';
+  scheduleNext();
+}
+
+function buildScatter() {
+  const zones=[
+    {x:[10,36],y:[14,42]},{x:[58,84],y:[14,42]},
+    {x:[30,62],y:[38,62]},
+    {x:[10,36],y:[56,82]},{x:[58,84],y:[56,82]}
+  ];
+  scatterPos=words.map((_,i)=>{
+    const z=zones[i%zones.length];
+    return{x:z.x[0]+Math.random()*(z.x[1]-z.x[0]),y:z.y[0]+Math.random()*(z.y[1]-z.y[0])};
+  });
+}
+
+function getDelay() {
+  const base=60000/wpm, w=words[idx]||'';
+  const long=w.length>9?base*0.22:0;
+  const punc=/[.!?]/.test(w)?base*0.5:/[,;:]/.test(w)?base*0.16:0;
+  return Math.max(75,base+long+punc);
+}
+
+function scheduleNext() {
+  if(!playing)return;
+  show(idx);
+  timer=setTimeout(()=>{
+    idx+=(mode==='chunk')?2:1;
+    if(idx>=words.length) finish();
+    else scheduleNext();
+  }, getDelay());
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function show(i) {
+  let w=words[i]||'';
+  if(mode==='chunk'&&i+1<words.length) w=words[i]+' '+words[i+1];
+
+  if(mode==='scatter'){
+    const z=document.getElementById('scatter-zone'); z.innerHTML='';
+    const p=scatterPos[i]; const el=document.createElement('div');
+    el.className='sw active'; el.textContent=w;
+    const d=Math.sqrt(Math.pow(p.x-50,2)+Math.pow(p.y-50,2));
+    el.style.fontSize=Math.max(1.3,3.8-d*0.033)+'rem';
+    el.style.left=p.x+'%'; el.style.top=p.y+'%';
+    el.style.transform='translate(-50%,-50%)';
+    z.appendChild(el);
+  } else {
+    const el=document.getElementById('word-display');
+    const o=Math.max(0,Math.round(w.length*0.3)-1);
+    el.innerHTML=esc(w.slice(0,o))+'<span class="orp">'+esc(w[o]||'')+'</span>'+esc(w.slice(o+1));
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  }
+  updateCtx(i); updateProgress(i);
+  document.getElementById('word-counter').textContent=(i+1)+' / '+words.length;
+}
+
+function updateCtx(i) {
+  const s=Math.max(0,i-7),e=Math.min(words.length,i+10);
+  let h='';
+  for(let j=s;j<e;j++){
+    const isCur=j===i||(mode==='chunk'&&j===i+1);
+    if(j<i) h+=`<span class="d">${words[j]} </span>`;
+    else if(isCur) h+=`<span class="c">${words[j]} </span>`;
+    else h+=`<span class="u">${words[j]} </span>`;
+  }
+  document.getElementById('ctx-words').innerHTML=h;
+}
+
+function updateProgress(i) {
+  const step=mode==='chunk'?Math.ceil(i/2):i;
+  const total=mode==='chunk'?Math.ceil(words.length/2):words.length;
+  const pct=Math.round((step/total)*100);
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('h-prog').textContent=pct+'%';
+  document.getElementById('h-words').textContent=i+1;
+}
+
+function togglePlay() {
+  playing=!playing;
+  const btn=document.getElementById('play-btn');
+  if(playing){ btn.textContent='⏸ Pause'; scheduleNext(); }
+  else { clearTimeout(timer); btn.textContent='▶ Resume'; toast('Paused — press <strong>Space</strong> to resume'); }
+}
+
+function restartSession() {
+  clearTimeout(timer); idx=0; startTime=Date.now();
+  playing=true; document.getElementById('play-btn').textContent='⏸ Pause';
+  if(mode==='scatter') buildScatter();
+  scheduleNext();
+}
+function restartFromComplete() {
+  document.getElementById('complete').style.display='none'; startSession();
+}
+function endSession() { clearTimeout(timer); playing=false; showSetup(); }
+
+function finish() {
+  clearTimeout(timer); playing=false;
+  const secs=Math.round((Date.now()-startTime)/1000);
+  document.getElementById('fin-wpm').textContent=wpm;
+  document.getElementById('fin-words').textContent=words.length;
+  document.getElementById('fin-time').textContent=secs<60?secs+'s':Math.floor(secs/60)+'m '+(secs%60)+'s';
+  document.getElementById('reader').style.display='none';
+  document.getElementById('complete').style.display='flex';
+}
+
+function showSetup() {
+  clearTimeout(timer); playing=false;
+  ['reader','complete'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('setup').style.display='block';
+  document.getElementById('h-wpm').textContent='—';
+  document.getElementById('h-prog').textContent='0%';
+  document.getElementById('h-words').textContent='0';
+}
+
+let toastT;
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.innerHTML=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('reader').style.display==='none') return;
+  if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+  if(e.code==='ArrowUp'){ wpm=Math.min(800,wpm+20); document.getElementById('reader-slider').value=wpm; updateReaderSpeed(wpm); }
+  if(e.code==='ArrowDown'){ wpm=Math.max(60,wpm-20); document.getElementById('reader-slider').value=wpm; updateReaderSpeed(wpm); }
+  if(e.key==='r'||e.key==='R') restartSession();
+});
+
+document.getElementById('setup').style.display='block';
+</script>
+</body>
+</html>
